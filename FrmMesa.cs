@@ -17,6 +17,9 @@ namespace sime
     {
         Mesa Mesa = null;
 
+        DataSet dsProductos = new DataSet();
+        DataSet dsInventario = new DataSet();
+
         public FrmMesa(Mesa mesa)
         {
             InitializeComponent();
@@ -31,34 +34,33 @@ namespace sime
                 ucControlBox.Titulo = $"Estatus de la mesa <{Mesa.Nombre}>";
                 // pnlControlBox.BackColor = ucMesa.GetColorFondoByOcupada(Mesa.Ocupada);
 
-                DataSet ds = new DataSet();
-                ds.Tables.Add("datos");
+                dsProductos.Tables.Add("datos");
 
-                ds.Tables[0].Columns.Add("Nombre");
-                ds.Tables[0].Columns.Add("Cantidad");
-                ds.Tables[0].Columns.Add("Total");
+                dsProductos.Tables[0].Columns.Add("Nombre");
+                dsProductos.Tables[0].Columns.Add("Cantidad");
+                dsProductos.Tables[0].Columns.Add("Total");
 
-                ds.Tables[0].Rows.Add("Cocacola", 1, 36);
-                ds.Tables[0].Rows.Add("Cafe", 3, 50);
+                dsProductos.Tables[0].Rows.Add("Cocacola", 1, 36);
+                dsProductos.Tables[0].Rows.Add("Cafe", 3, 50);
 
-                dgvProductos.DataSource = ds.Tables[0];
+                dgvProductos.DataSource = dsProductos.Tables[0];
                 dgvProductos.Refresh();
 
-                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                for (int i = 0; i < dsProductos.Tables[0].Rows.Count; i++)
                 {
-                    lblTotal.Text = Convert.ToString(Convert.ToDecimal(lblTotal.Text) + Convert.ToDecimal(ds.Tables[0].Rows[i]["Total"]));
+                    lblTotal.Text = Convert.ToString(Convert.ToDecimal(lblTotal.Text) + Convert.ToDecimal(dsProductos.Tables[0].Rows[i]["Total"]));
                 }
 
-                DataSet dsInventario = new DataSet();
                 dsInventario.Tables.Add("datos");
 
+                dsInventario.Tables[0].Columns.Add("Codigo");
                 dsInventario.Tables[0].Columns.Add("Nombre");
                 dsInventario.Tables[0].Columns.Add("Precio");
 
-                dsInventario.Tables[0].Rows.Add("Cocacola", 36);
-                dsInventario.Tables[0].Rows.Add("Cafe", 25);
-                dsInventario.Tables[0].Rows.Add("Licuado de fresa", 30);
-                dsInventario.Tables[0].Rows.Add("Licuado de chocolate", 35);
+                dsInventario.Tables[0].Rows.Add(1, "Cocacola", 36);
+                dsInventario.Tables[0].Rows.Add(2, "Cafe", 25);
+                dsInventario.Tables[0].Rows.Add(3, "Licuado de fresa", 30);
+                dsInventario.Tables[0].Rows.Add(4, "Licuado de chocolate", 35);
 
                 dgvInventario.DataSource = dsInventario.Tables[0];
                 dgvInventario.Refresh();
@@ -79,6 +81,48 @@ namespace sime
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        private void dgvInventario_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+        }
+
+        private void dgvInventario_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                if (e.RowIndex < 0)
+                {
+                    return;
+                }
+
+                int idProducto = 0;
+                string idProductoStr = Convert.ToString(dgvInventario.Rows[e.RowIndex].Cells["Codigo"].Value);
+
+                if (string.IsNullOrEmpty(idProductoStr) || !int.TryParse(idProductoStr, out idProducto))
+                {
+                    return;
+                }
+
+                string nombre = Convert.ToString(dgvInventario.Rows[e.RowIndex].Cells["Nombre"].Value);
+                decimal precio = Convert.ToDecimal(dgvInventario.Rows[e.RowIndex].Cells["Precio"].Value);
+
+                dsProductos.Tables[0].Rows.Add(nombre, 1, precio);
+
+                dgvProductos.DataSource = dsProductos.Tables[0];
+                dgvProductos.Refresh();
+
+                lblTotal.Text = "0.0";
+
+                for (int i = 0; i < dsProductos.Tables[0].Rows.Count; i++)
+                {
+                    lblTotal.Text = Convert.ToString(Convert.ToDecimal(lblTotal.Text) + Convert.ToDecimal(dsProductos.Tables[0].Rows[i]["Total"]));
+                }
+            }
+            catch (Exception ex)
+            {
+                AlertError(ex.Message);
+            }
         }
     }
 }
